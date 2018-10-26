@@ -1,2 +1,5 @@
-em
 *.o
+GPATH
+GRTAGS
+GTAGS
+em
