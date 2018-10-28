@@ -4,5 +4,5 @@
 #include "HATS/version.hats"
 
 extern fun version (): void = "ext#version"
-implement version (): void =
+implement version () =
   println! (PROGRAM_NAME_LONG, " version ", VERSION)
