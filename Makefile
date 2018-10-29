@@ -32,7 +32,7 @@ HDR=ebind.h edef.h efunc.h epath.h estruct.h evar.h util.h version.h
 
 ATS=patsopt
 CC=gcc
-WARNINGS=-Wall -Wno-unused-but-set-variable -Wno-misleading-indentation -Wno-unused-label -Wno-uninitialized
+WARNINGS=-Wall -Wno-unused-but-set-variable -Wno-misleading-indentation -Wno-unused-label -Wno-uninitialized -Wno-unused-function
 CFLAGS=-O2 $(WARNINGS) -g -I$(PATSHOME) -I$(PATSHOME)/ccomp/runtime
 ifeq ($(uname_S),Linux)
  DEFINES=-DAUTOCONF -DPOSIX -DUSG -D_XOPEN_SOURCE=600 -D_GNU_SOURCE
