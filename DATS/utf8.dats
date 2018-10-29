@@ -39,13 +39,13 @@ implement utf8_to_unicode (pf | line, index, len, res) = bytes where {
 
 
   val c = line[index]
-  val () = !res := $UN.cast{unicode_t}{char} line[index]
+  val () = !res := $UN.cast{unicode_t}{char} c
 
   (*
    * 0xxxxxxx is valid utf8
    * 10xxxxxx is invalid UTF-8, we assume it is Latin1
    *)
-  val bytes = if (c < $UN.cast{char}{int} 0xc0)
+  val bytes = if ($UN.cast{int}{char} c < 0xc0)
     then 1U
     else bytes' where {
       (* Ok, it's 11xxxxxx, do a stupid decode *)
