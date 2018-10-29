@@ -82,5 +82,17 @@ implement unicode_to_utf8 (c, utf8) = bytes where {
   val bytes = 1U
   val () = utf8[0] := $UN.cast c
   val () = if (c > 0x7fU) then
-    undefined() // xxx TODO
+    undefined()
+    (* (* xxx TODO: Should implement following: *)
+		int prefix = 0x40;
+		char *p = utf8;
+		do {
+			*p++ = 0x80 + (c & 0x3f);
+			bytes++;
+			prefix >>= 1;
+			c >>= 6;
+		} while (c > prefix);
+		*p = c - 2*prefix;
+		reverse_string(utf8, p);
+     *)
 }
