@@ -56,11 +56,8 @@ implement utf8_to_unicode (pf | line, index, len, res) = bytes where {
         then 1U
         else bytes'' where {
           (* Ok, do the bytes *)
-          val value = ($UN.cast{uint}{char} c) land (mask - 1U) // xxx TODO
-(* (* Following occurs `unsolved constraint for var preservation` *)
           val value = loop2 (line, 1, len, bytes'',
                              ($UN.cast{uint}{char} c) land (mask - 1U))
-*)
           val () = !res := $UN.cast{unicode_t}{uint} value
         }
     }
