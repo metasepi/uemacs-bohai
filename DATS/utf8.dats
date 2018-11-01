@@ -79,9 +79,8 @@ implement utf8_to_unicode (pf | line, index, len, res) = bytes where {
  *)
 extern fun unicode_to_utf8 {m:nat | m > 0} (c: uint, utf8: !strnptr(m)): uint = "ext#unicode_to_utf8"
 implement unicode_to_utf8 (c, utf8) = bytes where {
-  val bytes = 1U
   val () = utf8[0] := $UN.cast c
-  val () = if (c > 0x7fU) then
+  val bytes = if (c > 0x7fU) then
     undefined()
     (* (* xxx TODO: Should implement following: *)
 		int prefix = 0x40;
@@ -95,4 +94,5 @@ implement unicode_to_utf8 (c, utf8) = bytes where {
 		*p = c - 2*prefix;
 		reverse_string(utf8, p);
      *)
+    else 1U
 }
