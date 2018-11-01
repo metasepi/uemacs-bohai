@@ -1,0 +1,31 @@
+os:
+  - linux
+sudo: false
+addons:
+  apt:
+    packages:
+    - libgc-dev
+    - libgmp-dev
+before_install:
+  - date
+  - cat /proc/cpuinfo
+  - cd ${HOME}
+  - gcc --version
+  - git clone https://github.com/githwxi/ATS-Postiats.git
+  # Install pkgs
+  - ${TRAVIS_BUILD_DIR}/travis-ci/installpkg.sh
+  # Build ATS1
+  - export ATSHOME=${HOME}/ats-lang-anairiats-0.2.12
+  - export ATSHOMERELOC=ATS-0.2.12
+  - ${HOME}/ATS-Postiats/travis-ci/ats1_setup.sh 0.2.12
+  - cd ${ATSHOME} && ./configure && make
+  # Build ATS2
+  - export PATSHOME=${HOME}/ATS-Postiats
+  - export PATH=${PATSHOME}/bin:${PATH}
+  - cd ${PATSHOME} && make -f codegen/Makefile_atslib && make -f Makefile_devl src_depend && make -f Makefile_devl all
+  - patsopt --version
+script:
+  - cd ${TRAVIS_BUILD_DIR}
+  - make
+after_script:
+  - date
