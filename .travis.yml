@@ -1,5 +1,6 @@
 os:
   - linux
+language: c
 sudo: false
 addons:
   apt:
