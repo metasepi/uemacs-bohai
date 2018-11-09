@@ -3,7 +3,7 @@
 #include "share/atspre_staload.hats"
 staload UN = "prelude/SATS/unsafe.sats"
 
-vtypedef tptr (a:t@ype, l:addr) = (a @ l | ptr l)
+vtypedef tptr (a:t@ype, l:addr) = (a @ l | ptr l) // xxx need it?
 typedef unicode_t = uint32
 
 (*
@@ -47,23 +47,22 @@ implement utf8_to_unicode (pf | line, index, len, res) =
    * 10xxxxxx is invalid UTF-8, we assume it is Latin1
    *)
     if ($UN.cast{int}{char} c < 0xc0)
-    then 1U
-    else
+    then 1U else
       let
         (* Ok, it's 11xxxxxx, do a stupid decode *)
-        val (mask, bytes'') = loop1 (c, 0x20U, 0x2U)
+        val (mask, bytes') = loop1 (c, 0x20U, 0x2U)
       in
         (* Invalid? Do it as a single byte Latin1 *)
-        if (bytes'' > 6 || bytes'' > len)
+        if (bytes' > 6 || bytes' > len)
         then 1U
         else
           let
             (* Ok, do the bytes *)
-            val value = loop2 (line, 1, len, bytes'',
+            val value = loop2 (line, 1, len, bytes',
                                ($UN.cast{uint}{char} c) land (mask - 1U))
             val () = !res := $UN.cast{unicode_t}{uint} value
           in
-            bytes''
+            bytes'
           end
       end
   end
