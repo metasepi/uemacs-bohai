@@ -22,21 +22,23 @@ typedef unicode_t = uint32
 extern fun utf8_to_unicode {l:addr} {i,m:nat | i < m} (pf: !unicode_t@l | line: !strnptr(m), index: uint(i), len: uint(m), res: ptr(l)): uint = "ext#utf8_to_unicode"
 implement utf8_to_unicode (pf | line, index, len, res) =
   let
-    fun loop1 (c: char, mask: uint, bytes: uint): (uint, uint) =
+    fun loop1 {m:nat} (c: char, mask: uint, bytes: uint(m)): [n:nat] (uint, uint(n)) =
       if ((($UN.cast{uint}{char} c) land mask) != 0U)
       then loop1 (c, mask >> 1, bytes + 1U)
       else (mask, bytes)
 
-    fun loop2 {m:nat} (line: !strnptr(m), i: int, len: uint(m), bytes: uint, value: uint): uint =
-      undefined()
-      (* (* xxx TODO: Should implement following: *)
-	for (i = 1; i < bytes; i++) {
-		c = line[i];
-		if ((c & 0xc0) != 0x80)
-			return 1;
-		value = (value << 6) | (c & 0x3f);
-	}
-       *)
+    fun loop2 {b,i,j,m:nat | i + b <= m} (line: !strnptr(m), index: uint(i), len: uint(m), bytes: uint(b), j: uint(j), value: uint): uint =
+      if j >= bytes then
+        value
+      else
+        let
+          val c = line[index + j]
+        in
+          if (($UN.cast{uint}{char} c) land 0xc0U) != 0x80U
+          then 1U
+          else loop2 (line, index, len, bytes, j + 1U,
+                      (value << 6) lor ($UN.cast{uint}{char} c land 0x3fU))
+        end
 
     val c = line[index]
     val () = !res := $UN.cast{unicode_t}{char} c
@@ -53,12 +55,13 @@ implement utf8_to_unicode (pf | line, index, len, res) =
         val (mask, bytes') = loop1 (c, 0x20U, 0x2U)
       in
         (* Invalid? Do it as a single byte Latin1 *)
-        if (bytes' > 6 || bytes' > len)
+        if (bytes' > 6 || bytes' > len + index)
         then 1U
         else
           let
             (* Ok, do the bytes *)
-            val value = loop2 (line, 1, len, bytes',
+            val () = assertloc (index + bytes' <= len) // xxx Why need me?
+            val value = loop2 (line, index, len, bytes', 1U,
                                ($UN.cast{uint}{char} c) land (mask - 1U))
             val () = !res := $UN.cast{unicode_t}{uint} value
           in
