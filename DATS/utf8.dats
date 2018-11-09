@@ -20,48 +20,54 @@ typedef unicode_t = uint32
  * are happily accepted and decoded, as are the various "invalid values".
  *)
 extern fun utf8_to_unicode {l1,l2:addr} {i,m:nat | i < m} (pf: !unicode_t@l1 | line: !strnptr(l2,m), index: int(i), len: int(m), res: ptr(l1)): uint = "ext#utf8_to_unicode"
-implement utf8_to_unicode (pf | line, index, len, res) = bytes where {
-  fun loop1 (c: char, mask: uint, bytes: uint): (uint, uint) =
-    if ((($UN.cast{uint}{char} c) land mask) != 0U)
+implement utf8_to_unicode (pf | line, index, len, res) =
+  let
+    fun loop1 (c: char, mask: uint, bytes: uint): (uint, uint) =
+      if ((($UN.cast{uint}{char} c) land mask) != 0U)
       then loop1 (c, mask >> 1, bytes + 1U)
       else (mask, bytes)
 
-  fun loop2 {m:nat} (line: !strnptr(m), i: int, len: int(m), bytes: uint, value: uint): uint =
-    undefined()
-    (* (* xxx TODO: Should implement following: *)
+    fun loop2 {m:nat} (line: !strnptr(m), i: int, len: int(m), bytes: uint, value: uint): uint =
+      undefined()
+      (* (* xxx TODO: Should implement following: *)
 	for (i = 1; i < bytes; i++) {
 		c = line[i];
 		if ((c & 0xc0) != 0x80)
 			return 1;
 		value = (value << 6) | (c & 0x3f);
 	}
-     *)
+       *)
 
 
-  val c = line[index]
-  val () = !res := $UN.cast{unicode_t}{char} c
+    val c = line[index]
+    val () = !res := $UN.cast{unicode_t}{char} c
+  in
 
   (*
    * 0xxxxxxx is valid utf8
    * 10xxxxxx is invalid UTF-8, we assume it is Latin1
    *)
-  val bytes = if ($UN.cast{int}{char} c < 0xc0)
+    if ($UN.cast{int}{char} c < 0xc0)
     then 1U
-    else bytes' where {
-      (* Ok, it's 11xxxxxx, do a stupid decode *)
-      val (mask, bytes'') = loop1 (c, 0x20U, 0x2U)
-
-      (* Invalid? Do it as a single byte Latin1 *)
-      val bytes' = if (bytes'' > 6 || bytes'' > len)
+    else
+      let
+        (* Ok, it's 11xxxxxx, do a stupid decode *)
+        val (mask, bytes'') = loop1 (c, 0x20U, 0x2U)
+      in
+        (* Invalid? Do it as a single byte Latin1 *)
+        if (bytes'' > 6 || bytes'' > len)
         then 1U
-        else bytes'' where {
-          (* Ok, do the bytes *)
-          val value = loop2 (line, 1, len, bytes'',
-                             ($UN.cast{uint}{char} c) land (mask - 1U))
-          val () = !res := $UN.cast{unicode_t}{uint} value
-        }
-    }
-}
+        else
+          let
+            (* Ok, do the bytes *)
+            val value = loop2 (line, 1, len, bytes'',
+                               ($UN.cast{uint}{char} c) land (mask - 1U))
+            val () = !res := $UN.cast{unicode_t}{uint} value
+          in
+            bytes''
+          end
+      end
+  end
 
 (*
  * unicode_to_utf8()
