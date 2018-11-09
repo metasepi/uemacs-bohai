@@ -19,7 +19,7 @@ typedef unicode_t = uint32
  * NOTE 2! This does *not* verify things like minimality. So overlong forms
  * are happily accepted and decoded, as are the various "invalid values".
  *)
-extern fun utf8_to_unicode {l:addr} {i,m:nat | i < m} (pf: !unicode_t@l | line: !strnptr(m), index: int(i), len: int(m), res: ptr(l)): uint = "ext#utf8_to_unicode"
+extern fun utf8_to_unicode {l:addr} {i,m:nat | i < m} (pf: !unicode_t@l | line: !strnptr(m), index: uint(i), len: uint(m), res: ptr(l)): uint = "ext#utf8_to_unicode"
 implement utf8_to_unicode (pf | line, index, len, res) =
   let
     fun loop1 (c: char, mask: uint, bytes: uint): (uint, uint) =
@@ -27,7 +27,7 @@ implement utf8_to_unicode (pf | line, index, len, res) =
       then loop1 (c, mask >> 1, bytes + 1U)
       else (mask, bytes)
 
-    fun loop2 {m:nat} (line: !strnptr(m), i: int, len: int(m), bytes: uint, value: uint): uint =
+    fun loop2 {m:nat} (line: !strnptr(m), i: int, len: uint(m), bytes: uint, value: uint): uint =
       undefined()
       (* (* xxx TODO: Should implement following: *)
 	for (i = 1; i < bytes; i++) {
