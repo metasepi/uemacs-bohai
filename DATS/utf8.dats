@@ -55,12 +55,11 @@ implement utf8_to_unicode (pf | line, index, len, res) =
         val (mask, bytes') = loop1 (c, 0x20U, 0x2U)
       in
         (* Invalid? Do it as a single byte Latin1 *)
-        if (bytes' > 6 || bytes' > len + index)
+        if ((bytes' > 6) + (bytes' > len - index))
         then 1U
         else
           let
             (* Ok, do the bytes *)
-            val () = assertloc (index + bytes' <= len) // xxx Why need me?
             val value = loop2 (line, index, len, bytes', 1U,
                                ($UN.cast{uint}{char} c) land (mask - 1U))
             val () = !res := $UN.cast{unicode_t}{uint} value
