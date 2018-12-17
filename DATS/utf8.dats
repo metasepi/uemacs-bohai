@@ -69,6 +69,8 @@ implement utf8_to_unicode (pf | line, index, len, res) =
       end
   end
 
+fun reverse_string(): void = undefined()
+
 (*
  * unicode_to_utf8()
  *
@@ -80,22 +82,24 @@ implement utf8_to_unicode (pf | line, index, len, res) =
  * possible sequence, while utf8_to_unicode() accepts both Latin1 and
  * overlong utf-8 sequences.
  *)
-extern fun unicode_to_utf8 {m:nat | m > 0} (c: uint, utf8: !strnptr(m)): uint = "ext#unicode_to_utf8"
-implement unicode_to_utf8 (c, utf8) = bytes where {
-  val () = utf8[0] := $UN.cast c
-  val bytes = if (c > 0x7fU) then
-    undefined()
-    (* (* xxx TODO: Should implement following: *)
-		int prefix = 0x40;
-		char *p = utf8;
-		do {
-			*p++ = 0x80 + (c & 0x3f);
-			bytes++;
-			prefix >>= 1;
-			c >>= 6;
-		} while (c > prefix);
-		*p = c - 2*prefix;
-		reverse_string(utf8, p);
-     *)
-    else 1U
-}
+extern fun unicode_to_utf8 {m:int | m == 6} (c: uint, utf8: !strnptr(m)): uint = "ext#unicode_to_utf8"
+implement unicode_to_utf8 {m}(c, utf8) =
+  let
+    val () = utf8[0] := $UN.cast c
+  in
+    if (c > 0x7fU)
+      then undefined()
+      (* (* xxx TODO: Should implement following: *)
+                 int prefix = 0x40;
+                 char *p = utf8;
+                 do {
+                         *p++ = 0x80 + (c & 0x3f);
+                         bytes++;
+                         prefix >>= 1;
+                         c >>= 6;
+                 } while (c > prefix);
+                 *p = c - 2*prefix;
+                 reverse_string(utf8, p);
+       *)
+      else 1U
+  end
