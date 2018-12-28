@@ -69,15 +69,21 @@ implement utf8_to_unicode (pf | line, index, len, res) =
       end
   end
 
-fun reverse_string {m,n:int | n < m} (utf8: !strnptr(m), bytes: int(n)): void =
-  undefined()
-  (* (* xxx TODO: Should implement following: *)
-	do {
-		char a = *begin, b = *end;
-		*end = a; *begin = b;
-		begin++; end--;
-	} while (begin < end);
-   *)
+fun reverse_string {m,n:nat | n < m} (utf8: !strnptr(m), bytes: int(n)): void =
+  let
+    fun loop {m,n,o:nat | n < m && o <= n} (utf8: !strnptr(m), bytes: int(n), index: int(o)): void =
+      if index * 2 >= bytes then () else
+        let
+          val a = utf8[index]
+          val b = utf8[bytes - index]
+          val () = utf8[index] := b
+          val () = utf8[bytes - index] := a
+        in
+          loop (utf8, bytes, index + 1)
+        end
+  in
+    loop (utf8, bytes, 0)
+  end
 
 (*
  * unicode_to_utf8()
@@ -93,27 +99,29 @@ fun reverse_string {m,n:int | n < m} (utf8: !strnptr(m), bytes: int(n)): void =
 extern fun unicode_to_utf8 {m:int | m == 6} (c: uint, utf8: !strnptr(m)): uint = "ext#unicode_to_utf8"
 implement unicode_to_utf8 {m}(c, utf8) =
   let
-    fun loop (prefixi: uint, bytes: int, c: uint): [n:nat | n < 6] (uint, int(n), uint) =
-      undefined()
-      (* (* xxx TODO: Should implement following: *)
-		do {
-			*p++ = 0x80 + (c & 0x3f);
-			bytes++;
-			prefix >>= 1;
-			c >>= 6;
-		} while (c > prefix);
-       *)
+    fun loop {m,n:nat | m == 6 && n < m} (utf8: !strnptr(m), prefixi: uint, bytes: int(n), c: uint): [o:nat | o < m] (uint, int(o), uint) =
+      let
+        val () = utf8[bytes] := $UN.cast(0x80U + (c land 0x3fU))
+        val bytes' = bytes + 1
+        val prefixi' = prefixi >> 1
+        val c' = c >> 6
+        val () = assertloc (bytes' < 6)
+      in
+        if c' > prefixi'
+        then (prefixi', bytes', c')
+        else loop (utf8, prefixi', bytes', c')
+      end
 
     val () = utf8[0] := $UN.cast c
   in
     if (c > 0x7fU)
-      then
-        let
-          val (prefixi, bytes, c') = loop (0x40U, 0, c)
-          val () = utf8[bytes] := $UN.cast(c' - 2U * prefixi)
-          val () = reverse_string(utf8, bytes)
-        in
-          $UN.cast{uint}{int}(bytes + 1)
-        end
-      else 1U
+    then
+      let
+        val (prefixi, bytes, c') = loop (utf8, 0x40U, 0, c)
+        val () = utf8[bytes] := $UN.cast(c' - 2U * prefixi)
+        val () = reverse_string(utf8, bytes)
+      in
+        $UN.cast{uint}{int}(bytes + 1)
+      end
+    else 1U
   end
